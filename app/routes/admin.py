@@ -38,6 +38,22 @@ def manage_users():
     roles = Role.query.all()
     return render_template('manage_users.html', users=users, roles=roles)
 
+@admin_bp.route('/delete-user/<int:user_id>', methods=['POST'])
+@jwt_required()
+@roles_required('Administrator')
+def delete_user(user_id):
+    
+    user_to_delete = User.query.get_or_404(user_id)
+
+    try:
+        db.session.delete(user_to_delete)
+        db.session.commit()
+        flash(f'User {user_to_delete.username} has been deleted successfully.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash('An error occurred while deleting the user.', 'danger')
+    return redirect(url_for('admin.manage_users'))
+
 @admin_bp.route('/assign-role', methods=['POST'])
 @jwt_required()
 @roles_required('Administrator')

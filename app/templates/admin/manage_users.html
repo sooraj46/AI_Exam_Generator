@@ -34,9 +34,9 @@
                     Assign Role
                 </button>
                 <!-- Delete User Button -->
-                <form method="POST" action="{{ url_for('admin.delete_user') }}" style="display:inline;">
+                <form method="POST" action="{{ url_for('admin.delete_user', user_id=user.id) }}" style="display:inline; background: none; border: none; padding: 0; margin: 0;">
                     <input type="hidden" name="user_id" value="{{ user.id }}">
-                    <button type="submit" class="btn btn-sm btn-danger btn-delete">Delete</button>
+                    <button type="submit" class="btn btn-danger btn-sm" style="background-color: #dc3545; border: none; color: white; padding: 5px 15px;">Delete</button>
                 </form>
             </td>
         </tr>

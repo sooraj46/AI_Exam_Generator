@@ -25,3 +25,15 @@ def roles_required(*roles):
                 return redirect(url_for('auth.login'))
         return wrapper
     return decorator
+
+def exam_conductor_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        user_id = get_jwt_identity()
+        current_user = User.query.get(user_id)
+        if not current_user.is_authenticated or not 'ExamConductor' in [role.name for role in current_user.roles]:
+            flash('You do not have permission to access this page.', 'danger')
+            return redirect(url_for('auth.login'))
+        return f(*args, **kwargs)
+    return decorated_function
+

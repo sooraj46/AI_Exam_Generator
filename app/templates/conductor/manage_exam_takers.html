@@ -1,0 +1,52 @@
+{% extends "layouts/base.html" %}
+
+{% block content %}
+<h2>Manage Exam Takers</h2>
+
+<!-- Form to Create a New Exam Taker -->
+<form method="POST" action="{{ url_for('conductor.manage_exam_takers') }}">
+    <div class="mb-3">
+        <label for="username" class="form-label">Username</label>
+        <input type="text" class="form-control" id="username" name="username" placeholder="Enter username" required>
+    </div>
+    <div class="mb-3">
+        <label for="email" class="form-label">Email</label>
+        <input type="email" class="form-control" id="email" name="email" placeholder="Enter email" required>
+    </div>
+    <div class="mb-3">
+        <label for="password" class="form-label">Password</label>
+        <input type="password" class="form-control" id="password" name="password" placeholder="Enter password" required>
+    </div>
+    <button type="submit" class="btn btn-primary">Create Exam Taker</button>
+</form>
+
+<hr>
+
+<!-- Table to Display All Exam Takers -->
+<h3>List of Exam Takers</h3>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Username</th>
+            <th>Email</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for exam_taker in exam_takers %}
+        <tr>
+            <td>{{ exam_taker.username }}</td>
+            <td>{{ exam_taker.email }}</td>
+            <td>
+                <!-- Delete Button -->
+                <form method="POST" action="{{ url_for('conductor.delete_exam_taker', user_id=exam_taker.id) }}" style="display:inline; background: none; border: none; padding: 0; margin: 0;">
+                    <input type="hidden" name="user_id" value="{{ exam_taker.id }}">
+                    <button type="submit" class="btn btn-danger btn-sm" style="background-color: #dc3545; border: none; color: white; padding: 5px 15px;" onclick="return confirm('Are you sure you want to delete this exam taker?');">Delete</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}
