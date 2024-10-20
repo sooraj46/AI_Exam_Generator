@@ -1,0 +1,118 @@
+{% extends "layouts/base.html" %}
+
+{% block content %}
+<h2 class="mb-4">Manage Users</h2>
+
+<!-- Button to Open Add User Modal -->
+<button type="button" class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addUserModal">
+    Add New User
+</button>
+
+<!-- Users Table -->
+<table class="table table-striped table-hover">
+    <thead class="table-dark">
+        <tr>
+            <th scope="col">Username</th>
+            <th scope="col">Email</th>
+            <th scope="col">Roles</th>
+            <th scope="col">Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for user in users %}
+        <tr>
+            <td>{{ user.username }}</td>
+            <td>{{ user.email }}</td>
+            <td>
+                {% for role in user.roles %}
+                    <span class="badge bg-secondary">{{ role.name }}</span>
+                {% endfor %}
+            </td>
+            <td>
+                <!-- Assign Role Button -->
+                <button type="button" class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#assignRoleModal{{ user.id }}">
+                    Assign Role
+                </button>
+                <!-- Delete User Button -->
+                <form method="POST" action="{{ url_for('admin.delete_user') }}" style="display:inline;">
+                    <input type="hidden" name="user_id" value="{{ user.id }}">
+                    <button type="submit" class="btn btn-sm btn-danger btn-delete">Delete</button>
+                </form>
+            </td>
+        </tr>
+
+        <!-- Assign Role Modal -->
+        <div class="modal fade" id="assignRoleModal{{ user.id }}" tabindex="-1" aria-labelledby="assignRoleModalLabel{{ user.id }}" aria-hidden="true">
+            <div class="modal-dialog">
+                <form method="POST" action="{{ url_for('admin.assign_role') }}">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="assignRoleModalLabel{{ user.id }}">Assign Role to {{ user.username }}</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <input type="hidden" name="user_id" value="{{ user.id }}">
+                            <div class="mb-3">
+                                <label for="role" class="form-label">Select Role</label>
+                                <select class="form-select" name="role" required>
+                                    {% for role in roles %}
+                                        <option value="{{ role.name }}">{{ role.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="submit" class="btn btn-success">Assign Role</button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- Add User Modal -->
+<div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <form method="POST" action="{{ url_for('admin.manage_users') }}">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addUserModalLabel">Add New User</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- User Details Form -->
+                    <div class="mb-3">
+                        <label for="new_username" class="form-label">Username</label>
+                        <input type="text" class="form-control" id="new_username" name="username" placeholder="Enter username" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="new_email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="new_email" name="email" placeholder="Enter email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="new_password" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="new_password" name="password" placeholder="Enter password" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="new_role" class="form-label">Role</label>
+                        <select class="form-select" id="new_role" name="role" required>
+                            {% for role in roles %}
+                                <option value="{{ role.name }}">{{ role.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">Add User</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

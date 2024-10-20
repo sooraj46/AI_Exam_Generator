@@ -1,0 +1,92 @@
+{% extends "layouts/base.html" %}
+
+{% block content %}
+<h2 class="mb-4">Manage Groups</h2>
+
+<!-- Button to Open Create Group Modal -->
+<button type="button" class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#createGroupModal">
+    Create New Group
+</button>
+
+<!-- Groups Table -->
+<table class="table table-bordered table-hover">
+    <thead class="table-light">
+        <tr>
+            <th scope="col">Group Name</th>
+            <th scope="col">Members</th>
+            <th scope="col">Access</th>
+            <th scope="col">Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for group in groups %}
+        <tr>
+            <td>{{ group.name }}</td>
+            <td>
+                {% for user in group.users %}
+                    <span class="badge bg-info text-dark">{{ user.username }}</span>
+                {% endfor %}
+            </td>
+            <td>
+                {% if group.access %}
+                    <span class="badge bg-success">Granted</span>
+                {% else %}
+                    <span class="badge bg-danger">Revoked</span>
+                {% endif %}
+            </td>
+            <td>
+                <!-- Toggle Access Button -->
+                <form method="POST" action="{{ url_for('conductor.toggle_access') }}" style="display:inline;">
+                    <input type="hidden" name="group_id" value="{{ group.id }}">
+                    {% if group.access %}
+                        <button type="submit" class="btn btn-sm btn-warning">Revoke Access</button>
+                    {% else %}
+                        <button type="submit" class="btn btn-sm btn-success">Grant Access</button>
+                    {% endif %}
+                </form>
+                <!-- Delete Group Button -->
+                <form method="POST" action="{{ url_for('conductor.delete_group') }}" style="display:inline;">
+                    <input type="hidden" name="group_id" value="{{ group.id }}">
+                    <button type="submit" class="btn btn-sm btn-danger btn-delete">Delete</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- Create Group Modal -->
+<div class="modal fade" id="createGroupModal" tabindex="-1" aria-labelledby="createGroupModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <form method="POST" action="{{ url_for('conductor.manage_groups') }}">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="createGroupModalLabel">Create New Group</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Group Details Form -->
+                    <div class="mb-3">
+                        <label for="group_name" class="form-label">Group Name</label>
+                        <input type="text" class="form-control" id="group_name" name="group_name" placeholder="Enter group name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="user_ids" class="form-label">Select Exam Takers</label>
+                        <select class="form-select" id="user_ids" name="user_ids" multiple required>
+                            {% for user in exam_takers %}
+                                <option value="{{ user.id }}">{{ user.username }}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text">Hold down the Ctrl (Windows) or Command (Mac) button to select multiple options.</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-success">Create Group</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
