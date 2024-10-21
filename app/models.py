@@ -16,6 +16,24 @@ group_users = db.Table('group_users',
     db.Column('user_id', db.Integer, db.ForeignKey('users.id'), primary_key=True)
 )
 
+class Document(db.Model):
+    __tablename__ = 'documents'
+    id = db.Column(db.Integer, primary_key=True)
+    filename = db.Column(db.String(256), nullable=False)
+    filepath = db.Column(db.String(512), nullable=False)
+    upload_date = db.Column(db.DateTime, default=datetime.utcnow)
+    owner_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    questions = db.relationship('Question', backref='document', lazy=True)
+
+class Question(db.Model):
+    __tablename__ = 'questions'
+    id = db.Column(db.Integer, primary_key=True)
+    question_text = db.Column(db.Text, nullable=False)
+    options = db.Column(db.JSON, nullable=False)  # Stores options as JSON
+    correct_answer = db.Column(db.String(256), nullable=False)
+    explanation = db.Column(db.Text)
+    document_id = db.Column(db.Integer, db.ForeignKey('documents.id'), nullable=False)
+
 class Role(db.Model):
     __tablename__ = 'roles'
     id = db.Column(db.Integer, primary_key=True)
@@ -34,6 +52,7 @@ class User(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     roles = db.relationship('Role', secondary=user_roles, backref=db.backref('users', lazy='dynamic'))
     groups = db.relationship('Group', secondary=group_users, backref=db.backref('users', lazy='dynamic'))
+    documents = db.relationship('Document', backref='owner', lazy=True)
 
     def set_password(self, password):
         self.password_hash = bcrypt.generate_password_hash(password).decode('utf-8')

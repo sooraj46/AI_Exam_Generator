@@ -1,0 +1,39 @@
+{% extends "layouts/base.html" %}
+
+{% block content %}
+<h2 class="mb-4">Generated Questions</h2>
+
+<!-- Questions Table -->
+<table class="table table-bordered table-hover">
+    <thead class="table-light">
+        <tr>
+            <th scope="col">Question</th>
+            <th scope="col">Options</th>
+            <th scope="col">Correct Answer</th>
+            <th scope="col">Explanation</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for question in questions %}
+        <tr>
+            <td>{{ question.question_text }}</td>
+            <td>
+                <ul style="list-style-type: none; padding-left: 0;">
+                    {% for option in question.options %}
+                    <li>{{ option }}</li>
+                    {% endfor %}
+                </ul>
+            </td>
+            <td>{{ question.correct_answer }}</td>
+            <td>{{ question.explanation }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- Button to Create Exam from Questions -->
+<a href="{{ url_for('conductor.create_exam', document_id=document.id) }}" class="btn btn-success">
+    Create Exam from these Questions
+</a>
+
+{% endblock %}

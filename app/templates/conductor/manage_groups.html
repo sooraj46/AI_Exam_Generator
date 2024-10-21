@@ -36,7 +36,7 @@
             </td>
             <td>
                 <!-- Toggle Access Button -->
-                <form method="POST" action="{{ url_for('conductor.toggle_access') }}" style="display:inline;">
+                <form method="POST" action="{{ url_for('conductor.toggle_access') }}" style="display:inline; background: none; border: none; padding: 0; margin: 0;">
                     <input type="hidden" name="group_id" value="{{ group.id }}">
                     {% if group.access %}
                         <button type="submit" class="btn btn-sm btn-warning">Revoke Access</button>
@@ -45,9 +45,9 @@
                     {% endif %}
                 </form>
                 <!-- Delete Group Button -->
-                <form method="POST" action="{{ url_for('conductor.delete_group') }}" style="display:inline;">
+                <form method="POST" action="{{ url_for('conductor.delete_group' , group_id=group.id) }}" style="display:inline; background: none; border: none; padding: 0; margin: 0;">
                     <input type="hidden" name="group_id" value="{{ group.id }}">
-                    <button type="submit" class="btn btn-sm btn-danger btn-delete">Delete</button>
+                    <button type="submit" class="btn btn-sm btn-danger btn-delete" style="background-color: #dc3545; border: none; color: white; padding: 5px 15px;">Delete</button>
                 </form>
             </td>
         </tr>

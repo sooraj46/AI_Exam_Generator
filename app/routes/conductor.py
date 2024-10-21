@@ -1,10 +1,35 @@
-import bcrypt
-from flask import Blueprint, request, render_template, flash, redirect, url_for
+import json
+import os
+from flask_bcrypt import Bcrypt
+from flask import Blueprint, current_app, request, render_template, flash, redirect, url_for
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from ..models import db, User, Group, Role
+from ..models import Document, Question, db, User, Group, Role
 from ..utils.decorators import roles_required
+import google.generativeai as genai
+from werkzeug.utils import secure_filename
+from typing_extensions import TypedDict, List
 
+bcrypt = Bcrypt()
 conductor_bp = Blueprint('conductor', __name__, template_folder='../templates/conductor')
+
+# Configure Gemini AI
+genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
+
+# Allowed file extensions
+ALLOWED_EXTENSIONS = {'pdf'}
+
+class Question(TypedDict):
+    question: str
+    options: List[str]
+    correct_answer: str
+    explanation: str
+
+class MCQGeneratorOutput(TypedDict):
+    questions: List[Question]
+
+def allowed_file(filename):
+    """Check if the file has an allowed extension."""
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 @conductor_bp.route('/manage-exam-takers', methods=['GET', 'POST'])
 @jwt_required()
@@ -19,15 +44,15 @@ def manage_exam_takers():
         if User.query.filter_by(username=username).first():
             flash('Username already exists.', 'danger')
             return redirect(url_for('conductor.manage_exam_takers'))
-
-        hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
+        
         exam_taker_role = Role.query.filter_by(name='ExamTaker').first()
 
         if not exam_taker_role:
             flash('Exam Taker role not found.', 'danger')
             return redirect(url_for('conductor.manage_exam_takers'))
-
-        new_exam_taker = User(username=username, email=email, password=hashed_password)
+        
+        new_exam_taker = User(username=username, email=email)
+        new_exam_taker.set_password(password)
         new_exam_taker.roles.append(exam_taker_role)
         db.session.add(new_exam_taker)
         db.session.commit()
@@ -102,3 +127,125 @@ def toggle_access():
     else:
         flash('Group not found.', 'danger')
     return redirect(url_for('conductor.manage_groups'))
+
+@conductor_bp.route('/delete-group/<int:group_id>', methods=['POST'])
+@jwt_required()
+@roles_required('ExamConductor')
+def delete_group(group_id):
+    group_to_delete = Group.query.get_or_404(group_id)
+    
+    db.session.delete(group_to_delete)
+    db.session.commit()
+    flash(f'Group {group_to_delete.name} has been deleted successfully.', 'success')
+    
+@conductor_bp.route('/upload-document', methods=['GET', 'POST'])
+@jwt_required()
+@roles_required('ExamConductor')
+def upload_document():
+    if request.method == 'POST':
+        file = request.files.get('file')
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            user_id = get_jwt_identity()
+            filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], f"{user_id}_{filename}")
+            file.save(filepath)
+
+            # Save the document in the database
+            document = Document(filename=filename, filepath=filepath, owner_id=user_id)
+            db.session.add(document)
+            db.session.commit()
+
+            flash('File uploaded successfully!', 'success')
+        else:
+            flash('Invalid file type. Please upload a PDF file.', 'danger')
+                
+    uploaded_documents = Document.query.filter_by(owner_id=get_jwt_identity()).all()
+    return render_template('conductor/upload_document.html' , documents=uploaded_documents)
+
+@conductor_bp.route('/generate-questions/<int:document_id>', methods=['GET', 'POST'])
+@jwt_required()
+@roles_required('ExamConductor')
+def generate_questions(document_id):
+    document = Document.query.get_or_404(document_id)
+    user_id = get_jwt_identity()
+    if document.owner_id != user_id:
+        flash('You do not have permission to access this document.', 'danger')
+        return redirect(url_for('conductor.upload_document'))
+
+    # Generate questions using Gemini AI
+    try:
+        # Prepare the prompt
+        prompt = f"""
+        Based on the following content, generate 10 multiple-choice questions in JSON format.
+        Each question should include:
+        - "question": The question text.
+        - "options": An array of four options.
+        - "correct_answer": The correct option.
+        - "explanation": A brief explanation.
+        """
+        myfile = genai.upload_file(path= document.filepath)
+        model = genai.GenerativeModel(model_name="gemini-1.5-flash")
+        response = model.generate_content([myfile , prompt],generation_config=genai.GenerationConfig(response_mime_type="application/json", response_schema= MCQGeneratorOutput ))
+
+        generated_text = response.text
+
+        # Parse the generated text to extract questions
+        questions = parse_generated_questions(generated_text, document)
+
+        db.session.add_all(questions)
+        db.session.commit()
+
+        flash('Questions generated successfully!', 'success')
+        return render_template('conductor/view_questions.html', questions=questions)
+    except Exception as e:
+        flash(f'Error generating questions: {e}', 'danger')
+        return redirect(url_for('conductor.upload_document'))
+
+def parse_generated_questions(generated_text, document):
+    """
+    Parse the generated text (in JSON format) to extract questions.
+    """
+    try:
+        questions_data = json.loads(generated_text.replace('\n', ''))
+        questions = []
+        for q in questions_data.questions:
+            question = Question(
+                question_text=q['question'],
+                options=q['options'],
+                correct_answer=q['correct_answer'],
+                explanation=q.get('explanation', ''),
+                document=document
+            )
+            questions.append(question)
+        return questions
+    except json.JSONDecodeError as e:
+        flash('Error parsing generated questions. Please ensure the AI output is in valid JSON format.', 'danger')
+        return []
+    
+@conductor_bp.route('/delete_document/<int:document_id>', methods=['POST'])
+@jwt_required()
+@roles_required('ExamConductor')
+def delete_document(document_id):
+    # Fetch the document from the database
+    document = Document.query.get_or_404(document_id)
+    
+    # Ensure the logged-in user is the owner of the document
+    user_id = get_jwt_identity()
+    if document.owner_id != user_id:
+        flash('You do not have permission to delete this document.', 'danger')
+        return redirect(url_for('conductor.upload_document'))
+    
+    # Try to remove the file from the filesystem
+    try:
+        if os.path.exists(document.filepath):
+            os.remove(document.filepath)
+    except Exception as e:
+        flash(f"Error deleting file from filesystem: {e}", 'danger')
+        return redirect(url_for('conductor.upload_document'))
+    
+    # Remove the document entry from the database
+    db.session.delete(document)
+    db.session.commit()
+    
+    flash('Document has been successfully deleted.', 'success')
+    return redirect(url_for('conductor.upload_document'))

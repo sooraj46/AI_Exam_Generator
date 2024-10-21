@@ -12,6 +12,9 @@ class Config:
     JWT_COOKIE_SECURE = False  # Set to True in production (requires HTTPS)
     JWT_ACCESS_COOKIE_NAME = 'access_token_cookie'
     JWT_COOKIE_SAMESITE = 'Lax'  
+    UPLOAD_FOLDER = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'uploads')
+    MAX_CONTENT_LENGTH = 20 * 1024 * 1024  # 20MB upload limit
+    ALLOWED_EXTENSIONS = {'pdf'}
 
 class DevelopmentConfig(Config):
     DEBUG = True

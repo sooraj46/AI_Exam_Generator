@@ -1,0 +1,63 @@
+{% extends "layouts/base.html" %}
+
+{% block content %}
+<h2 class="mb-4">Upload Document and Generate Exam</h2>
+
+<!-- Button to Open Upload Document Modal -->
+<button type="button" class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#uploadDocumentModal">
+    Upload New Document
+</button>
+
+<!-- Documents Table -->
+<table class="table table-bordered table-hover">
+    <thead class="table-light">
+        <tr>
+            <th scope="col">Document Name</th>
+            <th scope="col">Upload Date</th>
+            <th scope="col">Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for document in documents %}
+        <tr>
+            <td>{{ document.filename }}</td>
+            <td>{{ document.upload_date.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+            <td>
+                <!-- Generate Questions Button -->
+                <a href="{{ url_for('conductor.generate_questions', document_id=document.id) }}" class="btn btn-sm btn-primary">Generate Questions</a>
+                <!-- Delete Document Button -->
+                <form method="POST" action="{{ url_for('conductor.delete_document', document_id=document.id) }}" style="display:inline; background: none; border: none; padding: 0; margin: 0;">
+                    <button type="submit" class="btn btn-sm btn-danger btn-delete">Delete</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- Upload Document Modal -->
+<div class="modal fade" id="uploadDocumentModal" tabindex="-1" aria-labelledby="uploadDocumentModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <form method="POST" action="{{ url_for('conductor.upload_document') }}" enctype="multipart/form-data">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Upload New Document</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Document Upload Form -->
+                    <div class="mb-3">
+                        <label for="file" class="form-label">Select Document (PDF)</label>
+                        <input type="file" class="form-control" id="file" name="file" accept=".pdf" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-success">Upload</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

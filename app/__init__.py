@@ -1,3 +1,4 @@
+import os
 from flask import Flask
 from .models import db, bcrypt, User
 from flask_migrate import Migrate
@@ -16,6 +17,9 @@ def create_app(config_name='default'):
     bcrypt.init_app(app)
     migrate = Migrate(app, db)
     jwt = JWTManager(app)
+
+    if not os.path.exists(app.config['UPLOAD_FOLDER']):
+        os.makedirs(app.config['UPLOAD_FOLDER'])
 
     # Register blueprints
     app.register_blueprint(auth_bp)
