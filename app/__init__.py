@@ -7,6 +7,7 @@ from .routes.auth import auth_bp
 from .routes.admin import admin_bp
 from .routes.conductor import conductor_bp
 from config import config
+import json
 
 def create_app(config_name='default'):
     app = Flask(__name__)
@@ -20,6 +21,11 @@ def create_app(config_name='default'):
 
     if not os.path.exists(app.config['UPLOAD_FOLDER']):
         os.makedirs(app.config['UPLOAD_FOLDER'])
+
+    # Register the json_loads filter
+    @app.template_filter('json_loads')
+    def json_loads_filter(s):
+        return json.loads(s)
 
     # Register blueprints
     app.register_blueprint(auth_bp)

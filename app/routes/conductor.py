@@ -1,3 +1,4 @@
+from datetime import time
 import json
 import os
 from flask_bcrypt import Bcrypt
@@ -8,6 +9,8 @@ from ..utils.decorators import roles_required
 import google.generativeai as genai
 from werkzeug.utils import secure_filename
 from typing_extensions import TypedDict, List
+from google.ai.generativelanguage_v1beta.types import content
+
 
 bcrypt = Bcrypt()
 conductor_bp = Blueprint('conductor', __name__, template_folder='../templates/conductor')
@@ -18,18 +21,30 @@ genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
 # Allowed file extensions
 ALLOWED_EXTENSIONS = {'pdf'}
 
-class Question(TypedDict):
-    question: str
-    options: List[str]
-    correct_answer: str
-    explanation: str
-
-class MCQGeneratorOutput(TypedDict):
-    questions: List[Question]
-
 def allowed_file(filename):
     """Check if the file has an allowed extension."""
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def upload_to_gemini(path: str, mime_type: str = None):
+    """
+    https://ai.google.dev/gemini-api/docs/prompting_with_media
+    """
+    file = genai.upload_file(path, mime_type=mime_type)
+    print(f"Uploaded file '{file.display_name}' as: {file.uri}")
+    return file
+
+
+def wait_for_files_active(files):
+    print("Waiting for file processing...")
+    for name in (file.name for file in files):
+        file = genai.get_file(name)
+        while file.state.name == "PROCESSING":
+            print(".", end="", flush=True)
+            time.sleep(10)
+            file = genai.get_file(name)
+        if file.state.name != "ACTIVE":
+            raise Exception(f"File {file.name} failed to process")
+    
 
 @conductor_bp.route('/manage-exam-takers', methods=['GET', 'POST'])
 @jwt_required()
@@ -39,6 +54,7 @@ def manage_exam_takers():
         username = request.form.get('username')
         email = request.form.get('email')
         password = request.form.get('password')
+        
 
         # Check if the username already exists
         if User.query.filter_by(username=username).first():
@@ -179,24 +195,67 @@ def generate_questions(document_id):
         Based on the following content, generate 10 multiple-choice questions in JSON format.
         Each question should include:
         - "question": The question text.
-        - "options": An array of four options.
+        - "options": An array of 4 options.
         - "correct_answer": The correct option.
         - "explanation": A brief explanation.
+        Question and Answer should be entirely based on the document alone
         """
-        myfile = genai.upload_file(path= document.filepath)
-        model = genai.GenerativeModel(model_name="gemini-1.5-flash")
-        response = model.generate_content([myfile , prompt],generation_config=genai.GenerationConfig(response_mime_type="application/json", response_schema= MCQGeneratorOutput ))
+        
+        generation_config = {
+            "temperature": 1.5,
+            "top_p": 0.95,
+            "top_k": 64,
+            "max_output_tokens": 8192,
+            "response_schema": content.Schema(
+                type=content.Type.OBJECT,
+                enum=[],
+                required=["questions"],
+                properties={
+                    "questions": content.Schema(
+                        type=content.Type.ARRAY,
+                        items=content.Schema(
+                            type=content.Type.OBJECT,
+                            enum=[],
+                            required=["question", "options", "correct_answer", "explanation"],
+                            properties={
+                                "question": content.Schema(
+                                    type=content.Type.STRING,
+                                ),
+                                "options": content.Schema(
+                                    type=content.Type.ARRAY,
+                                    items=content.Schema(
+                                        type=content.Type.STRING,
+                                    ),
+                                ),
+                                "correct_answer": content.Schema(
+                                    type=content.Type.STRING,
+                                ),
+                                "explanation": content.Schema(
+                                    type=content.Type.STRING,
+                                ),
+                            },
+                        ),
+                    ),
+                },
+            ),
+            "response_mime_type": "application/json",
+        }
+        
+        model = genai.GenerativeModel(model_name="gemini-1.5-flash", generation_config=generation_config, system_instruction=prompt)
+        myfile = genai.upload_file(path= document.filepath, mime_type="application/pdf")
+        wait_for_files_active([myfile])
+        response = model.generate_content([myfile])
 
         generated_text = response.text
 
         # Parse the generated text to extract questions
         questions = parse_generated_questions(generated_text, document)
-
         db.session.add_all(questions)
+        
         db.session.commit()
 
         flash('Questions generated successfully!', 'success')
-        return render_template('conductor/view_questions.html', questions=questions)
+        return render_template('conductor/view_questions.html', questions=questions, document=document)
     except Exception as e:
         flash(f'Error generating questions: {e}', 'danger')
         return redirect(url_for('conductor.upload_document'))
@@ -207,14 +266,15 @@ def parse_generated_questions(generated_text, document):
     """
     try:
         questions_data = json.loads(generated_text.replace('\n', ''))
+        questionsJSON = questions_data['questions']
         questions = []
-        for q in questions_data.questions:
+        for q in questionsJSON:
             question = Question(
                 question_text=q['question'],
-                options=q['options'],
+                options=json.dumps(q['options']),
                 correct_answer=q['correct_answer'],
                 explanation=q.get('explanation', ''),
-                document=document
+                document_id =document.id
             )
             questions.append(question)
         return questions
