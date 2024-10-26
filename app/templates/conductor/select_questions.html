@@ -1,0 +1,60 @@
+{% extends "layouts/base.html" %}
+
+{% block content %}
+<h2 class="mb-4">Create Exam from Generated Questions</h2>
+
+<form method="post">
+    <!-- Exam Details -->
+    <div class="mb-3">
+        <label for="exam_name" class="form-label">Exam Name:</label>
+        <input type="text" class="form-control" id="exam_name" name="exam_name" required>
+    </div>
+    <div class="mb-3">
+        <label for="group_id" class="form-label">Select Group:</label>
+        <select class="form-control" id="group_id" name="group_id" required>
+            {% for group in groups %}
+            <option value="{{ group.id }}">{{ group.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="mb-3">
+        <label for="time_limit" class="form-label">Time Limit (minutes):</label>
+        <input type="number" class="form-control" id="time_limit" name="time_limit" required>
+    </div>
+
+    <!-- Questions Accordion -->
+    <h3 class="mt-4">Select Questions</h3>
+    <div class="accordion" id="questionsAccordion">
+        {% for question in questions %}
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="heading{{ loop.index }}">
+                <div class="d-flex align-items-center">
+                    <input type="checkbox" class="form-check-input me-2" name="selected_questions" value="{{ loop.index0 }}" checked>
+                    <button class="accordion-button {% if not loop.first %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ loop.index }}" aria-expanded="{% if loop.first %}true{% else %}false{% endif %}" aria-controls="collapse{{ loop.index }}">
+                        Question {{ loop.index }}: {{ question.question }}
+                    </button>
+                </div>
+            </h2>
+            <div id="collapse{{ loop.index }}" class="accordion-collapse collapse {% if loop.first %}show{% endif %}" aria-labelledby="heading{{ loop.index }}" data-bs-parent="#questionsAccordion">
+                <div class="accordion-body">
+                    <!-- Options -->
+                    <h5>Options:</h5>
+                    <ul>
+                        {% for option in question.options %}
+                        <li>{% if option == question.correct_answer %}<strong>{{ option }}</strong>{% else %}{{ option }}{% endif %}</li>
+                        {% endfor %}
+                    </ul>
+                    <!-- Explanation -->
+                    {% if question.explanation %}
+                    <p><strong>Explanation:</strong> {{ question.explanation }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Submit Button -->
+    <button type="submit" class="btn btn-primary mt-4">Create Exam from Selected Questions</button>
+</form>
+{% endblock %}

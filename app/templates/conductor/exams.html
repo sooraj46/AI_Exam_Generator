@@ -1,0 +1,36 @@
+<!-- app/templates/conductor/exams.html -->
+{% extends "layouts/base.html" %}
+{% block content %}
+<h2>Your Exams</h2>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Exam Name</th>
+            <th>Group</th>
+            <th>Created At</th>
+            <th>Total Users</th>
+            <th>Completed</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in exams %}
+        {% set exam = item.exam %}
+        <tr>
+            <td>{{ exam.name }}</td>
+            <td>{{ exam.group.name }}</td>
+            <td>{{ exam.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+            <td>{{ item.total_users }}</td>
+            <td>{{ item.taken_by }} / {{ item.total_users }}</td>
+            <td>
+                <a href="{{ url_for('conductor.exam_details', exam_id=exam.id) }}" class="btn btn-primary btn-sm">View Details</a>
+            </td>
+        </tr>
+        {% else %}
+        <tr>
+            <td colspan="6">No exams found.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

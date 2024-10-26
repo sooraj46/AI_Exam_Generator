@@ -1,0 +1,24 @@
+{% extends "layouts/base.html" %}
+{% block content %}
+<h2>Create Exam from "{{ document.filename }}"</h2>
+<form method="post">
+    <div class="mb-3">
+        <label for="examName" class="form-label">Exam Name</label>
+        <input type="text" class="form-control" id="examName" name="exam_name" required>
+    </div>
+    <div class="mb-3">
+        <label for="groupSelect" class="form-label">Select Group</label>
+        <select class="form-select" id="groupSelect" name="group_id" required>
+            <option value="" disabled selected>Select a group</option>
+            {% for group in groups %}
+            <option value="{{ group.id }}">{{ group.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="mb-3">
+        <label for="timeLimit" class="form-label">Time Limit (minutes)</label>
+        <input type="number" class="form-control" id="timeLimit" name="time_limit" required min="1">
+    </div>
+    <button type="submit" class="btn btn-primary">Create Exam</button>
+</form>
+{% endblock %}

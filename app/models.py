@@ -16,6 +16,31 @@ group_users = db.Table('group_users',
     db.Column('user_id', db.Integer, db.ForeignKey('users.id'), primary_key=True)
 )
 
+class Exam(db.Model):
+    __tablename__ = 'exams'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(150))
+    document_id = db.Column(db.Integer, db.ForeignKey('documents.id'))
+    questions = db.relationship('Question', backref='exam', lazy=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    access_code = db.Column(db.String(50), unique=True, nullable=False)
+    group_id = db.Column(db.Integer, db.ForeignKey('groups.id'), nullable=False)
+    group = db.relationship('Group', backref='exams')
+    time_limit = db.Column(db.Integer, nullable=False)  # Time limit in minutes
+
+class ExamResponse(db.Model):
+    __tablename__ = 'exam_responses'
+    id = db.Column(db.Integer, primary_key=True)
+    exam_id = db.Column(db.Integer, db.ForeignKey('exams.id'))
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    responses = db.Column(db.Text)  # JSON string of user responses
+    score = db.Column(db.Float)
+    started_at = db.Column(db.DateTime, default=datetime.utcnow)
+    submitted_at = db.Column(db.DateTime)
+    # Relationships
+    user = db.relationship('User', backref='exam_responses')
+    exam = db.relationship('Exam', backref='exam_responses')
+
 class Document(db.Model):
     __tablename__ = 'documents'
     id = db.Column(db.Integer, primary_key=True)
@@ -24,15 +49,17 @@ class Document(db.Model):
     upload_date = db.Column(db.DateTime, default=datetime.utcnow)
     owner_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     questions = db.relationship('Question', backref='document', lazy=True)
+    owner = db.relationship('User', backref='documents')
 
 class Question(db.Model):
     __tablename__ = 'questions'
     id = db.Column(db.Integer, primary_key=True)
     question_text = db.Column(db.Text, nullable=False)
     options = db.Column(db.JSON, nullable=False)  # Stores options as JSON
-    correct_answer = db.Column(db.String(256), nullable=False)
+    correct_answer = db.Column(db.Text, nullable=False)
     explanation = db.Column(db.Text)
     document_id = db.Column(db.Integer, db.ForeignKey('documents.id'), nullable=False)
+    exam_id = db.Column(db.Integer, db.ForeignKey('exams.id'), nullable=True)
 
 class Role(db.Model):
     __tablename__ = 'roles'
@@ -52,7 +79,6 @@ class User(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     roles = db.relationship('Role', secondary=user_roles, backref=db.backref('users', lazy='dynamic'))
     groups = db.relationship('Group', secondary=group_users, backref=db.backref('users', lazy='dynamic'))
-    documents = db.relationship('Document', backref='owner', lazy=True)
 
     def set_password(self, password):
         self.password_hash = bcrypt.generate_password_hash(password).decode('utf-8')
