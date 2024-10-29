@@ -1,0 +1,40 @@
+<!-- app/templates/conductor/exam_details.html -->
+{% extends "layouts/base.html" %}
+{% block content %}
+<h2>Exam Details: {{ exam.name }}</h2>
+<p><strong>Group:</strong> {{ exam.group.name }}</p>
+<p><strong>Created At:</strong> {{ exam.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Exam Taker</th>
+            <th>Status</th>
+            <th>Score (%)</th>
+            <th>Submitted At</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in user_statuses %}
+        <tr>
+            <td>{{ item.user.username }}</td>
+            {% if item.taken %}
+            <td><span class="badge bg-success">Submitted</span></td>
+            <td>{{ item.score }}</td>
+            <td>{{ item.submitted_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+            {% else %}
+            <td><span class="badge bg-warning">Not Submitted</span></td>
+            <td>N/A</td>
+            <td>N/A</td>
+            {% endif %}
+        </tr>
+        {% else %}
+        <tr>
+            <td colspan="4">No users found in this group.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<a href="{{ url_for('conductor.list_exams') }}" class="btn btn-secondary">Back to Exams</a>
+{% endblock %}
