@@ -3,9 +3,9 @@ runtime: python39
 entrypoint: gunicorn run:app
 
 env_variables:
-  SECRET_KEY: "your_secret_key"
-  JWT_SECRET_KEY: "your_jwt_secret_key"
-  DATABASE_URL: "postgresql://username:password@host:port/dbname"
+  #SECRET_KEY: "your_secret_key"
+  #JWT_SECRET_KEY: "your_jwt_secret_key"
+  #DATABASE_URL: "postgresql://username:password@host:port/dbname"
 
 handlers:
   - url: /.*

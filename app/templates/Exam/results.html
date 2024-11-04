@@ -1,0 +1,173 @@
+{% extends "layouts/base.html" %}
+{% block styles %}
+    <style>
+        /* Global styles */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+        .analytics-button {
+            display: inline-block;
+            padding: 12px 24px;
+            margin-top: 20px;
+            background-color: #28a745;
+            color: white;
+            text-align: center;
+            text-decoration: none;
+            font-size: 16px;
+            border-radius: 8px;
+            transition: background-color 0.3s ease;
+        }
+
+        .analytics-button:hover {
+            background-color: #218838;
+        }
+
+
+        /* Container for the entire content */
+        .container {
+            width: 80%;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: white;
+            box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            margin-top: 40px;
+        }
+
+        /* Heading and Score */
+        h1 {
+            text-align: center;
+            color: #4CAF50;
+            margin-bottom: 30px;
+        }
+
+        .score {
+            text-align: center;
+            font-size: 1.2em;
+            margin-bottom: 20px;
+            color: #555;
+        }
+
+        .score span {
+            font-weight: bold;
+        }
+
+        /* Styling the list of questions */
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        li {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        li b {
+            color: #333;
+        }
+
+        /* Correct / Incorrect styles */
+        .correct {
+            color: green;
+            font-weight: bold;
+        }
+
+        .incorrect {
+            color: red;
+            font-weight: bold;
+        }
+
+        /* Explanation styling */
+        .explanation {
+            font-style: italic;
+            color: #777;
+        }
+
+        /* Button to retake the quiz */
+        .btn {
+            display: block;
+            text-align: center;
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 1.1em;
+            margin-top: 20px;
+            width: fit-content;
+            margin: 20px auto;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn:hover {
+            background-color: #45a049;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .container {
+                width: 95%;
+            }
+
+            h1 {
+                font-size: 1.8em;
+            }
+
+            .btn {
+                font-size: 1em;
+            }
+        }
+    </style>
+
+{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <h1>Quiz Results</h1>
+        <div class="score">
+            <p>Your Score: <span>{{ score }}</span> / <span>{{ total }}</span></p>
+            <p>Percentage: <span>{{ percentage }}%</span></p>
+        </div>
+
+        <ul>
+            {% for result in results %}
+                <li>
+                    <b>Question:</b> {{ result.question }}
+                    <br>
+                    <b>Your Answer:</b> {{ result.user_answer }}
+                    <br>
+                    <b>Correct Answer:</b> {{ result.correct_answer }}
+                    <br>
+                    {% if result.is_correct %}
+                        <span class="correct">Correct!</span>
+                    {% else %}
+                        <span class="incorrect">Incorrect</span>
+                    {% endif %}
+                    <br>
+                    <b>Explanation:</b> <span class="explanation">{{ result.explanation }}</span>
+                </li>
+            {% endfor %}
+        </ul>
+
+   <!-- Add an attractive button to link to personal analytics page -->
+   <a href="{{ url_for('QAGenerator.personal_analytics') }}" class="analytics-button">View Your Personal Analytics</a>
+
+   <!-- Link to take another quiz -->
+   <a href="{{ url_for('QAGenerator.quiz') }}" class="analytics-button" style="background-color: #007bff; margin-top: 10px;">Take Another Quiz</a>
+
+    <!-- Link to take another quiz -->
+  
+    </div>
+</body>
+</html>
+
+{% endblock %}

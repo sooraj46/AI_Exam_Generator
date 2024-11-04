@@ -1,0 +1,95 @@
+{% extends "layouts/base.html" %}
+
+{% block content %}
+<h2 class="mb-4">Upload Document and Generate Exam</h2>
+
+<!-- Button to Open Upload Document Modal -->
+<div class="mb-3">
+  <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#uploadDocumentModal">
+    Upload New Document
+  </button>
+</div>
+
+<!-- Documents Table -->
+<table class="table table-bordered table-hover">
+    <thead class="table-light">
+        <tr>
+            <th>Document Name</th>
+            <th>Upload Date</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for document in documents %}
+        <tr>
+            <td>{{ document.filename }}</td>
+            <td>{{ document.upload_date.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+            <td>
+                <div class="d-flex gap-2 justify-content-center">
+                    {% if document.questions %} 
+                    <!-- Questions already exist, disable "Generate Questions" and show "Take Exam" -->
+                    <button type="button" class="btn btn-sm btn-secondary" disabled>Questions Generated</button>
+                    <form method="POST" action="{{ url_for('QAGenerator.start_quiz') }}"> 
+                        <input type="hidden" name="document_id" value="{{ document.id }}"> 
+                        <button type="submit" class="btn btn-sm btn-success">Take Exam</button>
+                    </form>
+                    
+                    {% else %}
+                    <!-- Questions not yet generated -->
+                    <form method="POST" action="{{ url_for('examgenerator.process_existing_documents') }}"> 
+                        <input type="hidden" name="document_ids" value="{{ document.id }}"> 
+                        <button type="submit" class="btn btn-sm btn-primary">Generate Questions</button>
+                    </form>
+                    {% endif %}
+                    <form method="POST" action="{{ url_for('examgenerator.delete_document', document_id=document.id) }}">
+                        <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                    </form>
+                </div>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- Upload Document Modal -->
+<div class="modal fade" id="uploadDocumentModal" tabindex="-1" aria-labelledby="uploadDocumentModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="{{ url_for('examgenerator.upload_and_generate') }}" enctype="multipart/form-data">
+               
+                <div class="modal-header">
+                    <h5 class="modal-title">Upload New Document</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="file" class="form-label">Select Document (PDF):</label>
+                        <input type="file" class="form-control" id="file" name="file" accept=".pdf" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-success">Upload</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Styles for Action Buttons */
+.table .btn-sm {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.875rem;
+}
+
+.table .d-flex {
+    gap: 0.5rem;  /* space between buttons */
+    flex-wrap: wrap; /* adjust buttons to fit line */
+}
+
+.table .btn-danger {
+    border: none;
+}
+</style>
+{% endblock %}

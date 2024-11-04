@@ -1,0 +1,113 @@
+{% extends "layouts/base.html" %}
+{% block content %}
+<section class="section">
+    <div class="container">
+        <h1 class="title">Personal Quiz Analytics</h1>
+        <form method="post">
+            <table class="table is-bordered is-striped is-hoverable is-fullwidth">
+                <thead>
+                    <tr>
+                        <th>Select</th>
+                        <th>Quiz Title</th>
+                        <th>Date Taken</th>
+                        <th>Questions Answered</th>
+                        <th>Questions Unanswered</th>
+                        <th>Score</th>
+                        <th>Total Questions</th>
+                        <th>Percentage Score</th>
+                        <th>Performance Summary</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% set previous_score = None %}
+                    {% for attempt in quiz_attempts %}
+                        <tr>
+                            <td><input type="checkbox" name="attempt_ids[]" value="{{ attempt.attempt_id }}"></td>
+                            <td>{{ attempt.filename }}</td>
+                            <td>{{ attempt.start_time }}</td>
+                            <td>{{ attempt.total_answered }}</td>
+                            <td>{{ attempt.total_unanswered }}</td>
+                            <td>{{ attempt.score }}</td>
+                            <td>{{ attempt.total_questions }}</td>
+                            <td>{{ (attempt.score / attempt.total_questions * 100)|round(2) if attempt.total_questions > 0 else 0 }}%</td>
+                            <td>
+                                {% if previous_score is not none %}
+                                    {% if attempt.score > previous_score %}
+                                        <span class="tag is-success">Improved by {{ (attempt.score - previous_score)|round(2) }}</span>
+                                    {% elif attempt.score < previous_score %}
+                                        <span class="tag is-danger">Dropped by {{ (previous_score - attempt.score)|round(2) }}</span>
+                                    {% else %}
+                                        <span class="tag is-info">No Change</span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="tag is-info">First attempt</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% set previous_score = attempt.score %}
+                    {% endfor %}
+                </tbody>
+            </table>
+            <button type="submit" class="button is-primary">Compare</button>
+        </form>
+        {% if quiz_attempts|length > 1 %}
+        <div id="score-comparison-graph"></div>
+        <script>
+            try {
+                const graphData = JSON.parse(`{{ graph_data | safe }}`);
+                console.log("Graph Data (JSON):", graphData);
+
+                if (!graphData || !Array.isArray(graphData)) {
+                    console.error("Invalid graphData:", graphData);
+                    return;
+                }
+
+                const attempts = graphData.map((item, index) => `Attempt ${index + 1}`);
+                console.log("Attempts:", attempts);
+
+                const scores = graphData.map(item => item.score);
+                console.log("Scores:", scores);
+
+                const totalQuestions = graphData.map(item => item.total_questions);
+                console.log("Total Questions:", totalQuestions);
+
+                const percentageScores = totalQuestions.map((total, i) => {
+                    if (total === 0) {
+                        console.warn("Total questions is zero for attempt", i + 1);
+                        return 0;
+                    }
+                    return ((scores[i] / total) * 100).toFixed(2);
+                });
+                console.log("Percentage Scores:", percentageScores);
+
+                var trace = {
+                    x: attempts,
+                    y: totalQuestions,
+                    type: 'bar',
+                    text: percentageScores.map((percentage, index) => `${scores[index]} / ${totalQuestions[index]} (${percentage}%)`),
+                    textposition: 'auto',
+                    hoverinfo: 'x+y+text',
+                    name: 'Total Questions'
+                };
+
+                var layout = {
+                    title: 'Score Comparison Over Attempts',
+                    xaxis: { title: 'Attempt' },
+                    yaxis: { title: 'Total Questions' },
+                    height: 400,
+                    width: 800
+                };
+
+                Plotly.newPlot('score-comparison-graph', [trace], layout)
+                    .catch(err => {
+                        console.error('Error creating Plotly chart:', err);
+                    });
+            } catch (err) {
+                console.error('Error parsing graphData or rendering the chart:', err);
+            }
+        </script>
+        {% endif %}
+    </div>
+</section>
+
+{% endblock %}

@@ -481,4 +481,3 @@ def exam_details(exam_id):
         })
 
     return render_template('conductor/exam_details.html', exam=exam, user_statuses=user_statuses)
-

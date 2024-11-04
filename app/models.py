@@ -1,6 +1,7 @@
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from datetime import datetime
+import json
 
 db = SQLAlchemy()
 bcrypt = Bcrypt()
@@ -60,6 +61,19 @@ class Question(db.Model):
     explanation = db.Column(db.Text)
     document_id = db.Column(db.Integer, db.ForeignKey('documents.id'), nullable=False)
     exam_id = db.Column(db.Integer, db.ForeignKey('exams.id'), nullable=True)
+    def to_dict(self):
+        options_data = self.options
+        if isinstance(options_data, str): # Check if it's a string
+            options_data = json.loads(options_data) # Parse only if it is.
+
+        return {
+            'id': self.id,
+            'question': self.question_text,
+            'options': options_data, # Use options_data
+            'answer': self.correct_answer,
+            'explanation': self.explanation
+        }
+    
 
 class Role(db.Model):
     __tablename__ = 'roles'
@@ -104,3 +118,31 @@ class Group(db.Model):
 
     def __repr__(self):
         return f"<Group {self.name}>"
+    
+class QuizAttempt(db.Model):
+    __tablename__ = 'quiz_attempts'
+    attempt_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    participant_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    start_time = db.Column(db.DateTime, default=datetime.utcnow)
+    end_time = db.Column(db.DateTime)
+    total_answered = db.Column(db.Integer)
+    total_unanswered = db.Column(db.Integer)
+    score = db.Column(db.Integer)
+
+    participant = db.relationship('User', backref='quiz_attempts')  # Relationship with User model
+    responses = db.relationship('QuizResponse', backref='attempt', lazy=True) # Relationship to responses
+
+
+class QuizResponse(db.Model):
+    __tablename__ = 'quiz_responses'
+    response_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    attempt_id = db.Column(db.Integer, db.ForeignKey('quiz_attempts.attempt_id'), nullable=False)
+    question_id = db.Column(db.Integer, db.ForeignKey('questions.id'), nullable=False)
+    selected_answer = db.Column(db.Text)
+    is_correct = db.Column(db.Boolean)
+
+    question = db.relationship('Question', backref='responses') # Add relationship
+
+    def __repr__(self):
+        return f"<Group {self.name}>"
+    
