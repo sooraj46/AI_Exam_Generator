@@ -2,7 +2,7 @@ from datetime import datetime
 from flask import Blueprint, render_template, request, redirect, url_for, session
 from flask_session import Session
 import json
-from flask import  current_app  # Add current_app here
+from flask import current_app  # Add current_app here
 from flask_jwt_extended import jwt_required, get_jwt_identity
 import logging
 import psycopg2
@@ -24,49 +24,6 @@ password = 'admin%40123'  # Use the encoded password
 database = 'QuizDB'
 host = 'localhost'
 port = '5432' """
-
-# Creating the connection string
-# qagen_bp.config['SQLALCHEMY_DATABASE_URI'] = f'postgresql://{username}:{password}@{host}:{port}/{database}'
-# qagen_bp.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False  # Optional, to suppress a warning
-
-# # Initialize SQLAlchemy
-# db = SQLAlchemy(qagen_bp)
-
-# Flask session setup
-
-# Session(qagen_bp)
-# qagen_bp.secret_key = str(uuid.uuid4())
-
-# # Configure logging
-# logging.basicConfig(level=logging.DEBUG)
-
-# # Limit file size to 1 MB
-# qagen_bp.config['MAX_CONTENT_LENGTH'] = 1 * 1024 * 1024  # 1 MB
-
-# def load_quiz_data_from_file(file):
-#     """Load quiz data from a file object."""
-#     try:
-#         file_content = file.read().decode('utf-8')  # Decode the file bytes to string
-#         quiz_data = json.loads(file_content)
-#         if not quiz_data.get('questions'):  # Check if 'questions' exists
-#             raise ValueError("Quiz data must contain 'questions'.")
-#         return quiz_data
-#     except (json.JSONDecodeError, ValueError) as e:
-#         current_app.logger.error(f"Error loading quiz data: {e}")
-#         return None
-    
-
-# @qagen_bp.route('/', methods=['GET', 'POST'])
-# @jwt_required()
-# def quiz_input():
-#     session.clear()
-#     session['user_id'] = 1 
-#     session['document_id'] = 1 
-#     session['current_question'] = 0
-#     session['user_answers'] = {}
-#     return redirect(url_for('QAGenerator.quiz'))
-
-
 
 @qagen_bp.route('/start_quiz', methods=['POST'])
 @jwt_required()
@@ -155,7 +112,7 @@ def quiz():
         elif 'back' in request.form and question_number > 0:
             session['current_question'] -= 1
             return redirect(url_for('QAGenerator.quiz'))
-        elif 'submit' in request.form:
+        elif 'quiz_submission' in request.form:
             return redirect(url_for('QAGenerator.results'))
 
     # Retrieve the current question details
@@ -321,7 +278,4 @@ def personal_analytics():
 def logout():
     session.clear()
     return redirect(url_for('login')) 
- 
-""" 
-if __name__ == '__main__':
-    app.run(debug=True) """
+
