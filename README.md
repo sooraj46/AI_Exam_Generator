@@ -6,7 +6,7 @@ This project generates AI-based exams.  It uses python, flask and GeminiAI.
 * Exam generation based on difficulty level.
 * Customizable question types.
 * Automated grading.
-* Integration with [mention any platforms].
+* Integration with GeminiAI.
 
 ## Getting Started
 
