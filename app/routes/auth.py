@@ -45,7 +45,7 @@ def login():
             access_token = create_access_token(identity=user.id, expires_delta=timedelta(hours=1))
             response = redirect(url_for('admin.manage_users') if user.has_role('Administrator') else
                                 url_for('conductor.manage_groups') if user.has_role('ExamConductor') else
-                                url_for('examgenerator.upload_and_generate') if user.has_role('Individual') else
+                                url_for('examgenerator.upload_and_generate') if user.has_role('ExamTaker') else
                                 url_for('auth.login'))
             set_access_cookies(response, access_token)
             flash('Logged in successfully.', 'success')

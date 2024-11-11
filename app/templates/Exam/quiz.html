@@ -1,228 +1,470 @@
 {% extends "layouts/base.html" %}
 
-{% block title %}My Quiz{% endblock %}
+{% block title %}Mobile Quiz{% endblock %}
 
 {% block styles %}
 <style>
+
+/* Reset and Base Styles */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: #f0f4f8;
+    color: #333;
+    line-height: 1.6;
+}
+
+/* Container and Layout */
 .container {
+    width: 100%;
+    margin: 0 auto;
+    padding: 20px 15px;
+    background-color: #ffffff;
+    min-height: 100vh;
     display: flex;
-    width: 90%; /* Adjusted to take 90% of screen width */
-    margin: 20px auto;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    border-radius: 8px;
-    overflow: hidden;
-    padding: 20px;
+    flex-direction: column;
+}
+
+.quiz-header {
+    text-align: center;
+    margin-bottom: 20px;
 }
 
 .quiz-area {
-    flex: 3;
-    padding: 20px 30px;
-    background-color: #fff;
+    flex: 1;
     overflow-y: auto;
 }
 
-.questions-container {
-    max-height: calc(100vh - 100px);
-    overflow-y: auto;
+.quiz-area h1 {
+    font-size: 28px;
+    color: #2c3e50;
+    margin-bottom: 20px;
+}
+
+.quiz-area h2 {
+    font-size: 22px;
+    color: #34495e;
+    margin-bottom: 15px;
+}
+
+.quiz-area p.question-text {
+    font-size: 18px;
+    color: #333;
+    margin-bottom: 25px;
 }
 
 .quiz-area form {
     width: 100%;
 }
 
-.quiz-area h1 {
-    font-size: 24px;
-    margin-bottom: 15px;
-    color: #333;
-}
-
-.quiz-area h2 {
-    font-size: 18px;
-    margin-bottom: 10px;
-    color: #333;
-}
-
-.quiz-area p {
-    font-size: 16px;
-    line-height: 1.6;
-    color: #333;
-    margin-bottom: 15px;
-}
-.quiz-area label {
+/* Option Styles */
+.option-label {
     display: flex;
     align-items: center;
-    font-size: 16px;
-    color: #333;
-    margin-bottom: 8px; /* Reduced spacing between options */
-    padding: 5px 10px; /* Tighter padding for answer options */
-    border-radius: 5px;
-    width: 100%;
-}
-
-.quiz-area input[type="radio"] {
-    margin-right: 10px; /* Reduced spacing between radio button and text */
-}
-
-.selected-option {
-    background-color: #c8e6c9;
-    color: #27672b;
-    padding: 5px 10px;
-}
-
-
-.navigation-area {
-    flex: 1;
-    padding: 20px;
-    background-color: #f5f5f5;
-    border-left: 1px solid #ddd;
-    max-height: 100vh;
-    overflow-y: auto;
-    min-width: 250px;
-}
-
-.question-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr); /* Adjusted to display 4 questions per row */
-    gap: 10px;
-}
-
-.question-box {
-    padding: 10px;
-    font-size: 14px;
-    border: none;
-    background-color: #e0e0e0;
-    color: #333;
-    text-align: center;
+    padding: 15px;
+    margin-bottom: 15px;
     cursor: pointer;
-    border-radius: 5px;
-    font-weight: 500;
-    transition: background-color 0.3s ease;
-}
-
-.question-box:hover {
-    background-color: #d0d0d0;
-}
-
-.answered {
-    background-color: #c8e6c9;
-    color: #27672b;
-}
-
-.question-counter {
-    margin-top: 20px;
-    display: flex;
-    justify-content: space-around;
     font-size: 16px;
-    font-weight: bold;
-    color: #333;
-    border: 1px solid #ddd;
-    padding: 10px 15px;
-    border-radius: 5px;
-    background-color: #f9f9f9;
+    color: #555;
+    background-color: #f9fbfd;
+    border-radius: 8px;
+    border: 1px solid #dfe6ed;
+    transition: background-color 0.3s, border-color 0.3s;
 }
 
-.question-counter p {
-    margin: 0;
-    flex: 1;
-    text-align: center;
+.option-label:hover {
+    background-color: #ecf3f9;
+    border-color: #cfd8e3;
+}
+
+.option-label input {
+    display: none;
+}
+
+.custom-radio {
+    height: 18px;
+    width: 18px;
+    background-color: #dfe6ed;
+    border-radius: 50%;
+    margin-right: 12px;
+    position: relative;
+    flex-shrink: 0;
+    transition: background-color 0.3s;
+}
+
+.option-label input:checked + .custom-radio {
+    background-color: #3498db;
+}
+
+.custom-radio::after {
+    content: '';
+    position: absolute;
+    display: none;
+    left: 5px;
+    top: 5px;
+    width: 8px;
+    height: 8px;
+    background-color: #ffffff;
+    border-radius: 50%;
+}
+
+.option-label input:checked + .custom-radio::after {
+    display: block;
+}
+
+/* Buttons */
+.buttons-container {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
 }
 
 button {
-    background-color: #4CAF50;
+    background-color: #3498db;
     border: none;
     color: white;
-    padding: 10px 20px;
-    text-align: center;
-    display: inline-block;
+    padding: 12px 20px;
     font-size: 16px;
-    margin: 4px 2px;
     cursor: pointer;
-    border-radius: 5px;
+    border-radius: 50px;
+    transition: background-color 0.3s;
+    flex: 1;
+    margin: 0 5px;
 }
 
 button:hover {
-    background-color: #45a049;
+    background-color: #2980b9;
 }
+
+button:disabled {
+    background-color: #bdc3c7;
+    cursor: not-allowed;
+}
+
+button svg {
+    width: 18px;
+    height: 18px;
+}
+
+/* Progress Bar */
+.progress-bar-container {
+    width: 100%;
+    background-color: #dfe6ed;
+    border-radius: 50px;
+    overflow: hidden;
+    margin: 20px 0;
+    height: 8px;
+}
+
+.progress-bar {
+    width: 0%;
+    height: 100%;
+    background-color: #3498db;
+    transition: width 0.3s;
+}
+
+/* Floating Navigation Button */
+.navigation-button {
+    position: fixed;
+    bottom: 70px;
+    right: 20px;
+    background-color: #3498db;
+    color: #fff;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 1000;
+}
+
+.navigation-button:hover {
+    background-color: #2980b9;
+}
+
+.navigation-button svg {
+    width: 28px;
+    height: 28px;
+}
+
+/* Navigation Modal */
+#navigation-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1001;
+}
+
+/*#navigation-modal .modal-content {
+    background-color: #fff;
+    margin: 100px 20px;
+    border-radius: 8px;
+    padding: 20px;
+    position: relative;
+}*/
+#navigation-modal .modal-content {
+    background-color: #fff;
+    width: 90vw; /* Set maximum width to 90% of viewport width */
+    max-width: 600px; /* Optional: Set a max width for larger screens */
+    margin: 0 auto; /* Center the modal horizontally */
+    left: 0;
+    right: 0;
+    padding: 20px;
+    overflow: auto; /* Enable scrolling inside the modal if content overflows */
+    box-sizing: border-box; /* Ensure padding doesn’t increase the width */
+    border-radius: 8px;
+}
+
+#navigation-modal .modal-content h3 {
+    font-size: 22px;
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+#navigation-modal .question-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(45px, 1fr));
+    gap: 10px;
+}
+
+#navigation-modal .question-box {
+    padding: 10px;
+    font-size: 14px;
+    background-color: #f9fbfd;
+    color: #34495e;
+    text-align: center;
+    cursor: pointer;
+    border-radius: 6px;
+    border: 1px solid #dfe6ed;
+    transition: background-color 0.3s, border-color 0.3s;
+}
+
+#navigation-modal .question-box:hover {
+    background-color: #ecf3f9;
+    border-color: #cfd8e3;
+}
+
+#navigation-modal .question-box.answered {
+    background-color: #d4edda;
+    color: #155724;
+    border-color: #c3e6cb;
+}
+
+#navigation-modal .question-box.current {
+    border: 2px solid #3498db;
+}
+
+#navigation-modal .close-modal {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    font-size: 24px;
+    color: #333;
+    cursor: pointer;
+}
+
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="container">
-    <div class="quiz-area">
+    <div class="quiz-header">
         <h1>Quiz</h1>
-
-        {% if current_question %}
-        <h2>Question {{ question_number }} / {{ num_questions }}</h2>
-        <p>{{ current_question.question }}</p>
-    
-        <form method="post">
-            <input type="hidden" name="document_id" value="{{ document_id }}"> 
-  
-            {% for option in current_question.options %}
-                <input type="radio" name="question" id="option_{{ loop.index }}" value="{{ option }}"
-                       {% if user_answers.get(question_number - 1) == option %}checked{% endif %}>
-                <label for="option_{{ loop.index }}" 
-                       class="{% if user_answers.get(question_number - 1) == option %} selected-option{% endif %}">
-                    {{ option }}
-                </label><br>
-            {% endfor %}
-            <br>
-        
-            {% if question_number > 1 %}
-                <button type="submit" name="back" value="back">Back</button>
-            {% endif %}
-        
-            {% if question_number < num_questions %}
-                <button type="submit" name="next" value="next">Next</button>
-            {% else %}
-                <button type="submit" name="submit" value="submit">Submit</button>
-            {% endif %}
-        </form>
-        
-    {% else %}
-        <p>No more questions. <a href="{{ url_for('QAGenerator.results') }}">View Results</a></p>
-    {% endif %}
-    
+        <div class="progress-bar-container">
+            <div class="progress-bar"></div>
+        </div>
     </div>
 
-    <div class="navigation-area">
-        <h3>Questions</h3>
-        <div class="scroll-container">
-            <form method="post">
-                <div class="question-grid">
-                    {% for i in range(num_questions) %}
-                        <button type="submit" name="question_number" value="{{ i }}" 
-                            class="question-box {{ answer_status[i] }}">
-                            {{ i + 1 }}
-                        </button>
-                    {% endfor %}
-                </div>
-            </form>
-        </div>
+    <div class="quiz-area">
+        {% if current_question %}
+        <h2>Question {{ question_number }} / {{ num_questions }}</h2>
+        <p class="question-text">{{ current_question.question }}</p>
 
-        <div class="question-counter">
-            <p>Answered: <span id="answered-count">{{ answered_count }}</span></p>
-            <p>Pending: <span id="pending-count">{{ num_questions - answered_count }}</span></p>
+        <form method="post" id="quiz-form">
+            <input type="hidden" name="document_id" value="{{ document_id }}">
+
+            {% for option in current_question.options %}
+            <label class="option-label">
+                <input type="radio" name="question" value="{{ option }}"
+                    {% if user_answers.get(question_number - 1) == option %}checked{% endif %}>
+                <span class="custom-radio"></span>
+                <span class="option-text">{{ option }}</span>
+            </label>
+            {% endfor %}
+
+            <div class="buttons-container">
+                {% if question_number > 1 %}
+                <button type="button" onclick="navigateQuestion('back')">
+                    <!-- Back Icon -->
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M15 19l-7-7 7-7" />
+                    </svg>
+                    Back
+                </button>
+                {% else %}
+                <button type="button" disabled>
+                    <!-- Back Icon -->
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M15 19l-7-7 7-7" />
+                    </svg>
+                    Back
+                </button>
+                {% endif %}
+
+                {% if question_number < num_questions %}
+                <button type="button" onclick="navigateQuestion('next')">
+                    Next
+                    <!-- Next Icon -->
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 5l7 7-7 7" />
+                    </svg>
+                </button>
+                {% else %}
+                <button type="button" onclick="submitQuiz()">
+                    Submit
+                    <!-- Submit Icon -->
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M5 13l4 4L19 7" />
+                    </svg>
+                </button>
+                {% endif %}
+            </div>
+        </form>
+        {% else %}
+        <p>No more questions. <a href="{{ url_for('QAGenerator.results') }}">View Results</a></p>
+        {% endif %}
+    </div>
+
+    <!-- Floating Navigation Button -->
+    <div class="navigation-button" onclick="openNavigationModal()">
+        <!-- Menu Icon -->
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+            <!-- Question mark bullets for list items -->
+            <text x="12" y="18" font-size="20" text-anchor="middle" fill="currentColor" font-family="Arial, sans-serif">?</text>
+            <text x="12" y="34" font-size="20" text-anchor="middle" fill="currentColor" font-family="Arial, sans-serif">?</text>
+            <text x="12" y="50" font-size="20" text-anchor="middle" fill="currentColor" font-family="Arial, sans-serif">?</text>
+            
+            <!-- Lines representing text next to each question marks -->
+            <rect x="20" y="12" width="36" height="4" fill="currentColor"></rect>
+            <rect x="20" y="28" width="36" height="4" fill="currentColor"></rect>
+            <rect x="20" y="44" width="36" height="4" fill="currentColor"></rect>
+        </svg>
+    </div>
+</div>
+
+<!-- Navigation Modal -->
+<div id="navigation-modal">
+    <div class="modal-content">
+        <span class="close-modal" onclick="closeNavigationModal()">&times;</span>
+        <h3>Questions</h3>
+        <div class="question-grid">
+            {% for i in range(num_questions) %}
+            <button type="button"
+                class="question-box {% if i == question_number - 1 %}current{% endif %} {% if answer_status[i] %}answered{% endif %}"
+                onclick="jumpToQuestion({{ i + 1 }})">
+                {{ i + 1 }}
+            </button>
+            {% endfor %}
         </div>
     </div>
 </div>
 
 <script>
-    // JavaScript to update the question counter dynamically
-    const answeredButtons = document.querySelectorAll('.question-box.answered');
-    const pendingButtons = document.querySelectorAll('.question-box.unanswered');
+// JavaScript to handle interactions and updates
 
-    document.getElementById('answered-count').textContent = answeredButtons.length;
-    document.getElementById('pending-count').textContent = pendingButtons.length;
+document.addEventListener('DOMContentLoaded', function () {
+    updateCounters();
 
-    document.querySelectorAll('.question-box').forEach(button => {
-        button.addEventListener('click', () => {
-            const answeredButtons = document.querySelectorAll('.question-box.answered');
-            const pendingButtons = document.querySelectorAll('.question-box.unanswered');
-
-            document.getElementById('answered-count').textContent = answeredButtons.length;
-            document.getElementById('pending-count').textContent = pendingButtons.length;
+    const options = document.querySelectorAll('.option-label input');
+    options.forEach(option => {
+        option.addEventListener('change', function () {
+            // Update answer status
+            updateAnswerStatus();
+            updateCounters();
         });
     });
+
+    updateAnswerStatus();
+});
+
+function updateAnswerStatus() {
+    const questionBox = document.querySelector('.question-box.current');
+    const selectedOption = document.querySelector('.option-label input:checked');
+    if (questionBox && selectedOption) {
+        questionBox.classList.add('answered');
+    } else if (questionBox) {
+        questionBox.classList.remove('answered');
+    }
+}
+
+function updateCounters() {
+    const answeredCount = document.querySelectorAll('.question-box.answered').length;
+    const progressBar = document.querySelector('.progress-bar');
+    progressBar.style.width = (answeredCount / {{num_questions }} * 100) + '%';
+}
+
+function navigateQuestion(direction) {
+    const form = document.getElementById('quiz-form');
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = direction;
+    input.value = direction;
+    form.appendChild(input);
+    form.submit();
+}
+
+function jumpToQuestion(number) {
+    closeNavigationModal();
+    const form = document.getElementById('quiz-form');
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = 'jump_to';
+    input.value = number;
+    form.appendChild(input);
+    form.submit();
+}
+
+function submitQuiz() {
+    const form = document.getElementById('quiz-form');
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = 'submit';
+    input.value = 'submit';
+    form.appendChild(input);
+    form.submit();
+}
+
+function openNavigationModal() {
+    document.getElementById('navigation-modal').style.display = 'block';
+}
+
+function closeNavigationModal() {
+    document.getElementById('navigation-modal').style.display = 'none';
+}
+
+// Close modal when clicking outside of it
+window.onclick = function(event) {
+    const modal = document.getElementById('navigation-modal');
+    if (event.target == modal) {
+        modal.style.display = 'none';
+    }
+}
 </script>
 {% endblock %}

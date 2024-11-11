@@ -125,16 +125,21 @@ def quiz():
     user_answers = session.get('user_answers', {})
 
     # Calculate answer status for each question
-    answer_status = [("answered" if i in user_answers else "unanswered") for i in range(num_questions)]
+    # Changed to a list of booleans
+    answer_status = [i in user_answers for i in range(num_questions)]
     answered_count = len(user_answers)
 
     if request.method == 'POST':
+        # Process user's answer to the current question
+        user_answer = request.form.get('question')
+        if user_answer:
+            user_answers[question_number] = user_answer
+            session['user_answers'] = user_answers
 
-        
-        # Handle navigation buttons: next, back, submit
-        if 'question_number' in request.form:
+        # Handle navigation buttons: next, back, submit, jump_to
+        if 'jump_to' in request.form:
             try:
-                goto_question = int(request.form['question_number'])
+                goto_question = int(request.form['jump_to']) - 1  # Adjusting because question numbers are 1-based in the template
                 if 0 <= goto_question < num_questions:
                     session['current_question'] = goto_question
                     return redirect(url_for('QAGenerator.quiz'))
@@ -143,14 +148,8 @@ def quiz():
             except (ValueError, TypeError):
                 return "Invalid question number", 400
 
-        # Process user's answer to the current question
-        user_answer = request.form.get('question')
-        if user_answer:
-            user_answers[question_number] = user_answer
-            session['user_answers'] = user_answers
-
         # Navigate based on button clicked
-        if 'next' in request.form and question_number + 1 < num_questions:
+        elif 'next' in request.form and question_number + 1 < num_questions:
             session['current_question'] += 1
             return redirect(url_for('QAGenerator.quiz'))
         elif 'back' in request.form and question_number > 0:
@@ -166,7 +165,7 @@ def quiz():
         'quiz.html',
         quiz_data=quiz_data,
         current_question=current_question,
-        question_number=question_number + 1,
+        question_number=question_number + 1,  # Adjusted for display purposes (1-based indexing)
         num_questions=num_questions,
         user_answers=user_answers,
         options=current_question.get('options') if current_question else [],

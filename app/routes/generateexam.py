@@ -22,7 +22,7 @@ def allowed_file(filename):
 #upload document & generate exam
 @examgenerator_bp.route('generate-exam', methods=['GET', 'POST'])
 @jwt_required()
-@roles_required('Individual')
+@roles_required('ExamTaker')
 def upload_and_generate():
     if request.method == 'POST':
         if 'file' not in request.files:
@@ -171,7 +171,7 @@ def wait_for_files_active(files):
 
 @examgenerator_bp.route('/delete_document/<int:document_id>', methods=['POST'])
 @jwt_required()
-@roles_required('Individual')
+@roles_required('ExamTaker')
 def delete_document(document_id):
     try:
         questions = Question.query.filter_by(document_id=document_id).all()
@@ -238,7 +238,7 @@ def delete_document(document_id):
 # New function to process questions for existing documents
 @examgenerator_bp.route('/process_existing_documents', methods=['POST'])
 @jwt_required()
-@roles_required('Individual')
+@roles_required('ExamTaker')
 def process_existing_documents():
     user_id = get_jwt_identity()
     documents = Document.query.filter_by(owner_id=user_id).all()

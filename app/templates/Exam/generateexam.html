@@ -29,19 +29,19 @@
                     {% if document.questions %} 
                     <!-- Questions already exist, disable "Generate Questions" and show "Take Exam" -->
                     <button type="button" class="btn btn-sm btn-secondary" disabled>Questions Generated</button>
-                    <form method="POST" action="{{ url_for('QAGenerator.start_quiz') }}"> 
+                    <form method="POST" action="{{ url_for('QAGenerator.start_quiz') }}" style="display:inline; background: none; border: none; padding: 0; margin: 0;"> 
                         <input type="hidden" name="document_id" value="{{ document.id }}"> 
                         <button type="submit" class="btn btn-sm btn-success">Take Exam</button>
                     </form>
                     
                     {% else %}
                     <!-- Questions not yet generated -->
-                    <form method="POST" action="{{ url_for('examgenerator.process_existing_documents') }}"> 
+                    <form method="POST" action="{{ url_for('examgenerator.process_existing_documents') }}" style="display:inline; background: none; border: none; padding: 0; margin: 0;"> 
                         <input type="hidden" name="document_ids" value="{{ document.id }}"> 
                         <button type="submit" class="btn btn-sm btn-primary">Generate Questions</button>
                     </form>
                     {% endif %}
-                    <form method="POST" action="{{ url_for('examgenerator.delete_document', document_id=document.id) }}">
+                    <form method="POST" action="{{ url_for('examgenerator.delete_document', document_id=document.id) }}" style="display:inline; background: none; border: none; padding: 0; margin: 0;">
                         <button type="submit" class="btn btn-sm btn-danger">Delete</button>
                     </form>
                 </div>

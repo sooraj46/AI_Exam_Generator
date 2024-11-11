@@ -7,6 +7,7 @@
     <title>{% block title %}{% endblock %}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto&display=swap">
     
     {% block styles %}{% endblock %}
     
@@ -14,12 +15,15 @@
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container-fluid">
-            <a class="navbar-brand" href="{{ url_for('auth.login') }}">Exam Management</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
-                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
+            <a class="navbar-brand me-auto" href="{{ url_for('auth.login') }}">Exam Management</a>
+            <div class="d-flex ms-auto">
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+            </div>
             </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
+            <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     {% if current_user %}
                         <li class="nav-item">
@@ -44,7 +48,7 @@
                                 <a class="nav-link" href="{{ url_for('conductor.list_exams') }}">View Exams</a>
                             </li>
                         {% endif %}
-                        {% if current_user.has_role('Individual') %}
+                        {% if current_user.has_role('ExamTaker') %}
                             <li class="nav-item">
                                 <a class="nav-link" href="{{ url_for('examgenerator.upload_and_generate') }}">Generate Exam</a>
                             </li>

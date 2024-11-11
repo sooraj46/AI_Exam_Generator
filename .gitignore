@@ -92,3 +92,4 @@ venv.bak/
 # macOS
 .DS_Store
 
+flask_session/
